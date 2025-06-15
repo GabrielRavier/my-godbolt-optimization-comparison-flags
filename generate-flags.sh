@@ -19,10 +19,10 @@ internal-print-generic-options-standards-and-extended-features() {
 
     internal-print-option -fasm -fgnu-keywords
     internal-print-option -fext-numeric-literals -fgnu-tm
-    internal-print-option -fcond-mismatch
-    internal-print-option -fgimple
+    # internal-print-option -fcond-mismatch # Only for C, not C++
+    # internal-print-option -fgimple # Only for C, not C++
     internal-print-option -flax-vector-conversions
-    internal-print-option -fms-extensions -fplan9-extensions
+    internal-print-option -fms-extensions # -fplan9-extensions # -fplan9-extensions is only for C, not C++
     internal-print-option -fcontracts -fcoroutines -fmodules
     internal-print-option -ftemplate-depth=900000
     internal-print-option -fopenacc
@@ -32,13 +32,17 @@ internal-print-generic-options-standards-and-extended-features() {
 }
 
 # Options that make the compiler generate code that is as fast as possible, even if it means breaking some standards or making the code non-portable
-internal-print-generic-options-optimizations-non-standard() {
+internal-print-generic-options-optimizations-non-standard-gcc-15-only() {
     internal-print-option -ffast-math -fallow-store-data-races -fno-semantic-interposition # The stuff enabled by -Ofast, used instead of -Ofast because Clang deprecated -Ofast
     internal-print-option -ffp-contract=fast
     internal-print-option -ffinite-loops
 
     internal-print-option -fexcess-precision=fast -fno-float-store -ffast-math -fno-math-errno -funsafe-math-optimizations -fassociative-math -freciprocal-math -ffinite-math-only -fno-signed-zeros -fno-trapping-math -fno-rounding-math
     internal-print-option -fno-signaling-nans -ffp-int-builtin-inexact -fcx-fortran-rules -fcx-limited-range
+}
+
+internal-print-generic-options-optimizations-non-standard() {
+    internal-print-generic-options-optimizations-non-standard-gcc-15-only
     internal-print-option -fcx-method=limited-range # Added in GCC 16
 }
 
@@ -53,7 +57,7 @@ internal-print-generic-options-optimizations-no-non-standard() {
 internal-print-generic-options-optimization() {
     # Options for optimization
     internal-print-option -fbuiltin -fnonansi-builtins 
-    internal-print-option -fhosted
+    # internal-print-option -fhosted # Only for C, not C++
     internal-print-option -fstrict-flex-arrays=3 -fstrict-enums -fstrict-aliasing -fstrict-overflow
     internal-print-option -O3
     internal-print-option -fomit-frame-pointer # Should be enabled by -O3, but just in case (some distros are disabling it these days...)
@@ -158,11 +162,10 @@ internal-print-generic-options-optimization-params() {
     internal-print-option --param=ira-simple-lra-insn-threshold=1000000 # 1000 at -O3
     internal-print-option --param=loop-invariant-max-bbs-in-loop=10000000 # 10000 at -O3
     internal-print-option --param=loop-max-datarefs-for-datadeps=1000000 # 1000 at -O3
-    internal-print-option --param=max-vartrack-size=50000000000 # 50000000 at -O3
+    internal-print-option --param=max-vartrack-size=1000000000 # 50000000 at -O3 (50000000000 would be far above the maximum of 2147483647, and we use less than half of that just in case there could be overflow issues)
     internal-print-option --param=max-vartrack-expr-depth=12000 # 12 at -O3
     internal-print-option --param=max-debug-marker-count=100000000 # 100000 at -O3
     internal-print-option --param=ipa-sra-max-replacements=16 # 8 at -O3 (16 is the maximum value)
-    internal-print-option --param=sra-max-replacements=32768 # 32 at -O3
     internal-print-option --param=graphite-max-nb-scop-params=10000 # 10 at -O3
     internal-print-option --param=ipa-jump-function-lookups=8000 # 8 at -O3
     internal-print-option --param=ipa-cp-value-list-size=8000 # 8 at -O3
@@ -189,7 +192,7 @@ internal-print-generic-options-optimization-params() {
     internal-print-option --param=uninit-max-chain-len=128 # 8 at -O3 (128 is the maximum value)
     internal-print-option --param=uninit-max-num-chains=128 # 8 at -O3 (128 is the maximum value)
     internal-print-option --param=ssa-name-def-chain-limit=524288 # 512 at -O3
-    internal-print-option --param=hash-table-verification-limit=10000 # 10 at -O3
+    # internal-print-option --param=hash-table-verification-limit=10000 # 10 at -O3 # Takes a long time to run, to the point Godbolt times out, so disable it for now
     internal-print-option --param=max-find-base-term-values=200000 # 200 at -O3
     internal-print-option --param=ranger-logical-depth=999 # 6 at -O3 (999 is the maximum value)
     internal-print-option --param=ranger-recompute-depth=100 # 5 at -O3 (100 is the maximum value)
@@ -236,12 +239,12 @@ internal-print-x86-options() {
     internal-print-option -mcmpccxadd -mamx-fp16 -mprefetchi -mraoint -mamx-complex -mavxvnniint16
     internal-print-option -msm3 -msha512 -msm4
     internal-print-option -mapxf -musermsr
-    internal-print-option -mavx10.1 -mavx10.2 -mavx10.1-256 -mavx10.1-512
+    internal-print-option -mavx10.1 -mavx10.2 # -mavx10.1-256 -mavx10.1-512 # -mavx10.1-256 and -mavx10.1-512 are removed in GCC 16, it seems
     internal-print-option -mamx-avx512 -mamx-tf32 -mamx-transpose -mamx-fp8
     internal-print-option -mmovrs -mamx-movrs
 
     local TUNE_CTRL_LIST
-    TUNE_CTRL_LIST='-mtune-ctrl=^avoid_false_dep_for_tzcnt,^avoid_false_dep_for_bls,^avoid_false_dep_for_bmi'
+    TUNE_CTRL_LIST='^avoid_false_dep_for_tzcnt,^avoid_false_dep_for_bls,^avoid_false_dep_for_bmi'
     TUNE_CTRL_LIST="$TUNE_CTRL_LIST"',^lcp_stall,use_incdec,use_himode_fiop,use_simode_fiop,use_ffreep,ext_80387_constants'
     TUNE_CTRL_LIST="$TUNE_CTRL_LIST"',use_gather_2parts,use_scatter_2parts,use_gather_4parts,use_scatter_4parts,use_gather_8parts,use_scatter_8parts'
     TUNE_CTRL_LIST="$TUNE_CTRL_LIST"',^avoid_fma512_chains,avx512_move_by_pieces,avx512_store_by_pieces,avx512_two_epilogues'
@@ -251,15 +254,16 @@ internal-print-x86-options() {
     internal-print-option -mnoreturn-no-callee-saved-registers
     internal-print-option -mcx16 -msahf -mmovbe -mshstk -mcrc32 -mmwait
     internal-print-option -mabi=sysv -mtls-dialect=gnu2
-    internal-print-option -mthreads
+    # internal-print-option -mthreads # Doesn't actually work anywhere except MinGW
     internal-print-option -momit-leaf-frame-pointer
     internal-print-option -mneeded
-    internal-print-option -mevex512
+    # internal-print-option -mevex512 # Removed in GCC 16, it seems
 }
 
 internal-print-x86-64-options() {
     internal-print-x86-options
     internal-print-option -m64
+    internal-print-option -fno-section-anchors # GCC does not support this option on x86-64
 }
 
 gcc-x86-64() {
