@@ -334,10 +334,10 @@ internal-print-generic-options-optimization-params() {
 
 # Note: $1 is a boolean that indicates whether to print the non-standard optimizations or to disable them
 internal-print-generic-options() {
-    internal-print-generic-options-standards-and-extended-features-gcc-8
-    internal-print-generic-options-optimization-gcc-8
-    ("$1" && internal-print-generic-options-optimizations-non-standard-gcc-8) || internal-print-generic-options-optimizations-disable-non-standard-gcc-8
-    internal-print-generic-options-optimization-params-gcc-8
+    internal-print-generic-options-standards-and-extended-features-gcc-14
+    internal-print-generic-options-optimization-gcc-13
+    ("$1" && internal-print-generic-options-optimizations-non-standard-gcc-10) || internal-print-generic-options-optimizations-disable-non-standard-gcc-10
+    internal-print-generic-options-optimization-params-gcc-14
     internal-print-option -g0 # We specifically want to avoid debugging statements, as they clutter assembly output and make it harder to read
 }
 
@@ -412,7 +412,6 @@ internal-print-x86-options-gcc-12() {
     TUNE_CTRL_LIST="$TUNE_CTRL_LIST"',use_gather_2parts,use_scatter_2parts,use_gather_4parts,use_scatter_4parts,use_gather_8parts,use_scatter_8parts'
     TUNE_CTRL_LIST="$TUNE_CTRL_LIST"',^avoid_fma512_chains,avx512_move_by_pieces,avx512_store_by_pieces'
     internal-print-option -mtune-ctrl="$TUNE_CTRL_LIST"
-
 }
 
 internal-print-x86-options-gcc-13() {
@@ -434,22 +433,23 @@ internal-print-x86-options-gcc-14() {
     internal-print-option -mavx10.1 # -mavx10.1-256 -mavx10.1-512 # -mavx10.1-256 and -mavx10.1-512 are removed in GCC 16, it seems
     internal-print-option -mapxf -musermsr
 
-    local TUNE_CTRL_LIST
-    TUNE_CTRL_LIST='^avoid_false_dep_for_tzcnt,^avoid_false_dep_for_bls,^avoid_false_dep_for_bmi'
-    TUNE_CTRL_LIST="$TUNE_CTRL_LIST"',^lcp_stall,use_incdec,use_himode_fiop,use_simode_fiop,use_ffreep,ext_80387_constants'
-    TUNE_CTRL_LIST="$TUNE_CTRL_LIST"',use_gather_2parts,use_scatter_2parts,use_gather_4parts,use_scatter_4parts,use_gather_8parts,use_scatter_8parts'
-    TUNE_CTRL_LIST="$TUNE_CTRL_LIST"',^avoid_fma512_chains,avx512_move_by_pieces,avx512_store_by_pieces,avx512_two_epilogues'
-    internal-print-option -mtune-ctrl="$TUNE_CTRL_LIST"
-
     internal-print-option -mnoreturn-no-callee-saved-registers
 }
 
 internal-print-x86-options-gcc-15()
 {
     internal-print-x86-options-gcc-14
+
     internal-print-option -mavx10.2
     internal-print-option -mamx-avx512 -mamx-tf32 -mamx-transpose -mamx-fp8
     internal-print-option -mmovrs -mamx-movrs
+
+    local TUNE_CTRL_LIST
+    TUNE_CTRL_LIST='^avoid_false_dep_for_tzcnt,^avoid_false_dep_for_bls,^avoid_false_dep_for_bmi'
+    TUNE_CTRL_LIST="$TUNE_CTRL_LIST"',^lcp_stall,use_incdec,use_himode_fiop,use_simode_fiop,use_ffreep,ext_80387_constants'
+    TUNE_CTRL_LIST="$TUNE_CTRL_LIST"',use_gather_2parts,use_scatter_2parts,use_gather_4parts,use_scatter_4parts,use_gather_8parts,use_scatter_8parts'
+    TUNE_CTRL_LIST="$TUNE_CTRL_LIST"',^avoid_fma512_chains,avx512_move_by_pieces,avx512_store_by_pieces,avx512_two_epilogues'
+    internal-print-option -mtune-ctrl="$TUNE_CTRL_LIST"
 }
 
 internal-print-x86-options() {
@@ -457,7 +457,7 @@ internal-print-x86-options() {
 }
 
 internal-print-x86-64-options() {
-    internal-print-x86-options-gcc-8
+    internal-print-x86-options-gcc-14
     internal-print-option -m64
     internal-print-option -fno-section-anchors # GCC does not support this option on x86-64
 }
