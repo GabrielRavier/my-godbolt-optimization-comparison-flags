@@ -433,7 +433,7 @@ internal-print-generic-options-optimization-params-gcc-7() {
 }
 
 internal-print-generic-options-optimization-params-gcc-8-before-8-5() {
-    internal-print-generic-options-optimization-params-gcc-6
+    internal-print-generic-options-optimization-params-gcc-7
     internal-print-option --param=max-debug-marker-count=100000000 # 100000 at -O3
 }
 
@@ -528,10 +528,11 @@ internal-print-generic-options-optimization-params() {
 
 # Note: $1 is a boolean that indicates whether to print the non-standard optimizations or to disable them
 internal-print-generic-options() {
-    internal-print-generic-options-standards-and-extended-features-gcc-3-4
-    internal-print-generic-options-optimization-gcc-3-4
-    ("$1" && (internal-print-generic-options-optimizations-non-standard-gcc-3-4 || true)) || internal-print-generic-options-optimizations-disable-non-standard-gcc-3-4
-    internal-print-generic-options-optimization-params-gcc-3-4
+    internal-print-generic-options-standards-and-extended-features
+    internal-print-generic-options-optimization
+    "$1" && internal-print-generic-options-optimizations-non-standard
+    "$1" || internal-print-generic-options-optimizations-disable-non-standard
+    internal-print-generic-options-optimization-params
     internal-print-option -g0 # We specifically want to avoid debugging statements, as they clutter assembly output and make it harder to read
 }
 
@@ -549,7 +550,7 @@ internal-print-x86-options-gcc-3-4() {
 }
 
 internal-print-x86-options-gcc-4-4() {
-    internal-print-x86-options-gcc-3-4
+    internal-print-x86-options-gcc-3-4 "$@"
     internal-print-option -march=barcelona
     internal-print-option -mtune=generic
 
@@ -565,19 +566,19 @@ internal-print-x86-options-gcc-4-4() {
 }
 
 internal-print-x86-options-gcc-4-5() {
-    internal-print-x86-options-gcc-4-4
+    internal-print-x86-options-gcc-4-4 "$@"
     internal-print-option -mfma4 -mxop -mlwp -mmovbe -mcrc32
 }
 
 internal-print-x86-options-gcc-4-6() {
-    internal-print-x86-options-gcc-4-5
+    internal-print-x86-options-gcc-4-5 "$@"
     internal-print-option -march=core-avx-i
     internal-print-option -mbmi -mrdrnd -mtbm -mfsgsbase -mf16c
     internal-print-option -mabi=sysv
 }
 
 internal-print-x86-options-gcc-4-7() {
-    internal-print-x86-options-gcc-4-6
+    internal-print-x86-options-gcc-4-6 "$@"
 
     internal-print-option -march=core-avx2
 
@@ -586,13 +587,13 @@ internal-print-x86-options-gcc-4-7() {
 }
 
 internal-print-x86-options-gcc-4-8() {
-    internal-print-x86-options-gcc-4-8
+    internal-print-x86-options-gcc-4-7 "$@"
     internal-print-option -mfxsr -mxsave -mxsaveopt
     internal-print-option -mrdseed -madx -mrtm -mhle -mprfchw
 }
 
 internal-print-x86-options-gcc-4-9-before-4-9-2() {
-    internal-print-x86-options-gcc-4-8
+    internal-print-x86-options-gcc-4-8 "$@"
 
     internal-print-option -march=broadwell
     internal-print-option -mavx512f -mavx512cd
@@ -602,36 +603,36 @@ internal-print-x86-options-gcc-4-9-before-4-9-2() {
 }
 
 internal-print-x86-options-gcc-4-9() {
-    internal-print-x86-options-gcc-4-9-before-4-9-2
+    internal-print-x86-options-gcc-4-9-before-4-9-2 "$@"
     X86_OPTIONS_TUNE_CTRL_LIST="$X86_OPTIONS_TUNE_CTRL_LIST"',^avoid_false_dep_for_bmi'
 }
 
 internal-print-x86-options-gcc-5-before-5-1() {
-    internal-print-x86-options-gcc-4-9
+    internal-print-x86-options-gcc-4-9 "$@"
     internal-print-option -mavx512vl -mavx512bw -mavx512dq -mavx512ifma -mavx512vbmi
     internal-print-option -mclflushopt -mclwb
     internal-print-option -mxsavec -mxsaves
 }
 
 internal-print-x86-options-gcc-5() {
-    internal-print-x86-options-gcc-5-before-5-1
+    internal-print-x86-options-gcc-5-before-5-1 "$@"
     internal-print-option -mmwaitx
 }
 
 internal-print-x86-options-gcc-6() {
-    internal-print-x86-options-gcc-5
+    internal-print-x86-options-gcc-5 "$@"
     internal-print-option -march=skylake-avx512
     internal-print-option -mclzero -mpku
 }
 
 internal-print-x86-options-gcc-7() {
-    internal-print-x86-options-gcc-6
+    internal-print-x86-options-gcc-6 "$@"
     internal-print-option -mavx512vpopcntdq
     internal-print-option -m3dnowa -mrdpid -msgx
 }
 
 internal-print-x86-options-gcc-8() {
-    internal-print-x86-options-gcc-7
+    internal-print-x86-options-gcc-7 "$@"
 
     internal-print-option -march=icelake-server
 
@@ -643,41 +644,43 @@ internal-print-x86-options-gcc-8() {
 }
 
 internal-print-x86-options-gcc-9-before-9-4() {
-    internal-print-x86-options-gcc-8
+    internal-print-x86-options-gcc-8 "$@"
     internal-print-option -mptwrite -mwaitpkg -mcldemote
 }
 
 internal-print-x86-options-gcc-9() {
-    internal-print-x86-options-gcc-9-before-9-4
+    internal-print-x86-options-gcc-9-before-9-4 "$@"
     internal-print-option -march=tigerlake
 }
 
 internal-print-x86-options-gcc-10() {
-    internal-print-x86-options-gcc-9
+    internal-print-x86-options-gcc-9 "$@"
     internal-print-option -mavx512bf16 -mavx512vp2intersect
     internal-print-option -menqcmd
 }
 
 internal-print-x86-options-gcc-11-before-11-3() {
-    internal-print-x86-options-gcc-10
+    internal-print-x86-options-gcc-10 "$@"
 
     internal-print-option -march=x86-64-v4 # Seems like a good baseline
 
     internal-print-option -mavxvnni
     internal-print-option -mamx-tile -mamx-int8 -mamx-bf16
     internal-print-option -mkl -mwidekl
-    internal-print-option -muintr -mtsxldtrk -mserialize -mhreset
+    internal-print-option -mtsxldtrk -mserialize -mhreset
+    # -muintr is not supported for 32-bit code
+    "$1" && internal-print-option -muintr
 
     internal-print-option -mneeded
 }
 
 internal-print-x86-options-gcc-11() {
-    internal-print-x86-options-gcc-11-before-11-3
+    internal-print-x86-options-gcc-11-before-11-3 "$@"
     internal-print-option -mmwait
 }
 
 internal-print-x86-options-gcc-12-before-12-3() {
-    internal-print-x86-options-gcc-11
+    internal-print-x86-options-gcc-11 "$@"
 
     internal-print-option -mavx512fp16
 
@@ -688,21 +691,21 @@ internal-print-x86-options-gcc-12-before-12-3() {
 }
 
 internal-print-x86-options-gcc-12-before-12-4() {
-    internal-print-x86-options-gcc-12-before-12-3
+    internal-print-x86-options-gcc-12-before-12-3 "$@"
 
     X86_OPTIONS_TUNE_CTRL_LIST="$X86_OPTIONS_TUNE_CTRL_LIST"',use_scatter_2parts,use_scatter_4parts'
     X86_OPTIONS_TUNE_CTRL_LIST="$X86_OPTIONS_TUNE_CTRL_LIST"',^avoid_fma512_chains'
 }
 
 internal-print-x86-options-gcc-12() {
-    internal-print-x86-options-gcc-12-before-12-4
+    internal-print-x86-options-gcc-12-before-12-4 "$@"
 
     # Note: use_gather_8parts and use_scatter_8parts appear to not be supported in GCC 13.1 and GCC 13.2, even though GCC 12.4 supports them...
     X86_OPTIONS_TUNE_CTRL_LIST="$X86_OPTIONS_TUNE_CTRL_LIST"',use_gather_8parts,use_scatter_8parts'
 }
 
 internal-print-x86-options-gcc-13-before-13-3() {
-    internal-print-x86-options-gcc-12
+    internal-print-x86-options-gcc-12 "$@"
 
     internal-print-option -mavxifma -mavxvnniint8 -mavxneconvert
     internal-print-option -mamx-fp16 -mamx-complex
@@ -715,25 +718,27 @@ internal-print-x86-options-gcc-13-before-13-3() {
 }
 
 internal-print-x86-options-gcc-13() {
-    internal-print-x86-options-gcc-13-before-13-3
+    internal-print-x86-options-gcc-13-before-13-3 "$@"
 
     X86_OPTIONS_TUNE_CTRL_LIST="$X86_OPTIONS_TUNE_CTRL_LIST"',use_gather_8parts,use_scatter_8parts' # Was already added in GCC 12 but removed in GCC 13.1 and GCC 13.2, so add it back here
 }
 
 internal-print-x86-options-gcc-14() {
-    internal-print-x86-options-gcc-13
+    internal-print-x86-options-gcc-13 "$@"
 
     internal-print-option -mavxvnniint16
     internal-print-option -msm3 -msm4
     internal-print-option -mavx10.1 # -mavx10.1-256 -mavx10.1-512 # -mavx10.1-256 and -mavx10.1-512 are removed in GCC 16, it seems
-    internal-print-option -msha512 -mapxf -musermsr
+    internal-print-option -msha512 -musermsr
+    # -mapxf is not supported for 32-bit code
+    "$1" && internal-print-option -mapxf
 
     internal-print-option -mnoreturn-no-callee-saved-registers
 }
 
 internal-print-x86-options-gcc-15()
 {
-    internal-print-x86-options-gcc-14
+    internal-print-x86-options-gcc-14 "$@"
 
     internal-print-option -mavx10.2
     internal-print-option -mamx-avx512 -mamx-tf32 -mamx-transpose -mamx-fp8
@@ -743,22 +748,35 @@ internal-print-x86-options-gcc-15()
     X86_OPTIONS_TUNE_CTRL_LIST="$X86_OPTIONS_TUNE_CTRL_LIST"',avx512_two_epilogues'
 }
 
+# Argument 1 to print-x86-options is a boolean that indicates whether we're on x86-64 or x86-32 (if true, we're on x86-64, if false, we're on x86-32)
 internal-print-x86-options() {
-    internal-print-x86-options-gcc-15
-}
-
-internal-print-x86-64-options() {
-    internal-print-x86-options-gcc-3-4
+    internal-print-x86-options-gcc-15 "$@"
 
     # If X86_OPTIONS_TUNE_CTRL_LIST is set, set the -mtune-ctrl option to it
     [ -n "${X86_OPTIONS_TUNE_CTRL_LIST:-}" ] && internal-print-option -mtune-ctrl="$X86_OPTIONS_TUNE_CTRL_LIST"
 
-    internal-print-option -m64
+    # Print -m64 if we're on x86-64, or -m32 if we're on x86-32
+    "$1" && internal-print-option -m64; "$1" || internal-print-option -m32
+
+    # On x86-32, position-independent code is a bit awkward to handle (it seems to output assembly output that llvm-mca has trouble parsing, for instance) and also makes code a bit longer, so disable it
+    "$1" || internal-print-option -fno-pie
 }
 
 gcc-x86-64() {
     internal-print-generic-options true
-    internal-print-x86-64-options
+    internal-print-x86-options true
+    printf '\n'
+}
+
+clang-x86-64() {
+    internal-print-generic-options true
+    internal-print-x86-options true
+    printf '\n'
+}
+
+gcc-x86-32() {
+    internal-print-generic-options true
+    internal-print-x86-options false
     printf '\n'
 }
 
@@ -770,8 +788,9 @@ do-single-compiler() {
 # For each argument, we print the "{argument}: {flags}"
 do-compilers() {
     for compiler in "$@"; do
-        printf "%s: " "$compiler"
+        printf "%s:\n" "$compiler"
         do-single-compiler "$compiler"
+        printf '\n'
     done
 }
 
@@ -779,7 +798,7 @@ do-compilers() {
 # If we have 1 argument, print the flags for that compiler without any prefixing
 # If we have more than 1 argument, print the flags for each of those compilers, prefixed with the compiler name
 if [ $# -eq 0 ]; then
-    do-compilers gcc-x86-64
+    do-compilers gcc-x86-64 clang-x86-64 gcc-x86-32
 elif [ $# -eq 1 ]; then
     do-single-compiler "$1"
 else
