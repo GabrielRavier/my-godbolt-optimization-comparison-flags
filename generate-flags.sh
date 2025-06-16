@@ -12,8 +12,8 @@ internal-print-option() {
 }
 
 # Options to make the compiler accept as much C++ code as possible (even invalid/non-compliant code or code that uses extensions)
-internal-print-generic-options-standards-and-extended-features-gcc-8() {
-    internal-print-option -std=gnu++2a
+internal-print-generic-options-standards-and-extended-features-gcc-7() {
+    internal-print-option -std=gnu++1z
     internal-print-option -pthread
     internal-print-option -fexceptions -frtti
 
@@ -28,6 +28,11 @@ internal-print-generic-options-standards-and-extended-features-gcc-8() {
     internal-print-option -fopenmp-simd -fopenmp
     internal-print-option -fpermissive
     internal-print-option -freg-struct-return
+}
+
+internal-print-generic-options-standards-and-extended-features-gcc-8() {
+    internal-print-generic-options-standards-and-extended-features-gcc-7
+    internal-print-option -std=gnu++2a
 }
 
 internal-print-generic-options-standards-and-extended-features-gcc-10() {
@@ -60,7 +65,7 @@ internal-print-generic-options-standards-and-extended-features() {
 }
 
 # Options that make the compiler generate code that is as fast as possible, even if it means breaking some standards or making the code non-portable
-internal-print-generic-options-optimizations-non-standard-gcc-8() {
+internal-print-generic-options-optimizations-non-standard-gcc-7() {
     internal-print-option -ffast-math -fno-semantic-interposition # The stuff enabled by -Ofast, used instead of -Ofast because Clang deprecated -Ofast
     internal-print-option -ffp-contract=fast
 
@@ -79,7 +84,7 @@ internal-print-generic-options-optimizations-non-standard() {
     internal-print-option -fcx-method=limited-range
 }
 
-internal-print-generic-options-optimizations-disable-non-standard-gcc-8() {
+internal-print-generic-options-optimizations-disable-non-standard-gcc-7() {
     internal-print-option -fno-fast-math -fsemantic-interposition
     internal-print-option -ffp-contract=on
 
@@ -99,7 +104,7 @@ internal-print-generic-options-optimizations-disable-non-standard() {
     internal-print-option -fcx-method=stdc
 }
 
-internal-print-generic-options-optimization-gcc-8() {
+internal-print-generic-options-optimization-gcc-7() {
     # Options for optimization
     internal-print-option -fbuiltin -fnonansi-builtins 
     # internal-print-option -fhosted # Only for C, not C++
@@ -170,7 +175,7 @@ internal-print-generic-options-optimization() {
     internal-print-option -fipa-reorder-for-locality # Might not be much good without profile feedback ?
 }
 
-internal-print-generic-options-optimization-params-gcc-8() {
+internal-print-generic-options-optimization-params-gcc-7() {
     internal-print-option --param=max-crossjump-edges=100000 # 100 at -O3
     internal-print-option --param=max-goto-duplication-insns=8888 # 8 at -O3
     internal-print-option --param=max-delay-slot-insn-search=100000 # 100 at -O3
@@ -225,7 +230,6 @@ internal-print-generic-options-optimization-params-gcc-8() {
 
     internal-print-option --param=max-vartrack-size=1000000000 # 50000000 at -O3 (50000000000 would be far above the maximum of 2147483647, and we use less than half of that just in case there could be overflow issues)
     internal-print-option --param=max-vartrack-expr-depth=12000 # 12 at -O3
-    internal-print-option --param=max-debug-marker-count=100000000 # 100000 at -O3
 
     internal-print-option --param=graphite-max-nb-scop-params=10000 # 10 at -O3
     internal-print-option --param=graphite-max-arrays-per-scop=100000 # 100 at -O3
@@ -256,6 +260,15 @@ internal-print-generic-options-optimization-params-gcc-8() {
     internal-print-option --param=max-early-inliner-iterations=1000 # 1 at -O3
     internal-print-option --param=max-fields-for-field-sensitive=100000 # 100 at -O3
 
+}
+
+internal-print-generic-options-optimization-params-gcc-8-before-8-5() {
+    internal-print-generic-options-optimization-params-gcc-7
+    internal-print-option --param=max-debug-marker-count=100000000 # 100000 at -O3
+}
+
+internal-print-generic-options-optimization-params-gcc-8() {
+    internal-print-generic-options-optimization-params-gcc-8-before-8-5
     internal-print-option --param=sra-max-propagations=32768 # 32 at -O3
 }
 
@@ -345,15 +358,15 @@ internal-print-generic-options-optimization-params() {
 
 # Note: $1 is a boolean that indicates whether to print the non-standard optimizations or to disable them
 internal-print-generic-options() {
-    internal-print-generic-options-standards-and-extended-features-gcc-8
-    internal-print-generic-options-optimization-gcc-8
-    ("$1" && internal-print-generic-options-optimizations-non-standard-gcc-8) || internal-print-generic-options-optimizations-disable-non-standard-gcc-8
-    internal-print-generic-options-optimization-params-gcc-8
+    internal-print-generic-options-standards-and-extended-features-gcc-7
+    internal-print-generic-options-optimization-gcc-7
+    ("$1" && (internal-print-generic-options-optimizations-non-standard-gcc-7 || true)) || internal-print-generic-options-optimizations-disable-non-standard-gcc-7
+    internal-print-generic-options-optimization-params-gcc-7
     internal-print-option -g0 # We specifically want to avoid debugging statements, as they clutter assembly output and make it harder to read
 }
 
-internal-print-x86-options-gcc-8() {
-    internal-print-option -march=icelake-server
+internal-print-x86-options-gcc-7() {
+    internal-print-option -march=skylake-avx512
     internal-print-option -mtune=generic
 
     internal-print-option -mfpmath=both # "still experimental" and results "in unstable performance" according to documentation, we'll have to see how it works out
@@ -361,7 +374,7 @@ internal-print-x86-options-gcc-8() {
 
     internal-print-option -mmmx
     internal-print-option -msse -msse2 -msse3 -mssse3 -msse4 -msse4a -msse4.1 -msse4.2
-    internal-print-option -mavx -mavx2 -mavx512f -mavx512cd -mavx512vl -mavx512bw -mavx512dq -mavx512ifma -mavx512vbmi -mavx512vbmi2 -mavx512bitalg -mavx512vpopcntdq -mavx512vnni
+    internal-print-option -mavx -mavx2 -mavx512f -mavx512cd -mavx512vl -mavx512bw -mavx512dq -mavx512ifma -mavx512vbmi -mavx512vpopcntdq
     # internal-print-option -mevex512 # Removed in GCC 16, it seems
     internal-print-option -msha -maes
     internal-print-option -mclflushopt -mclwb
@@ -370,11 +383,8 @@ internal-print-x86-options-gcc-8() {
     internal-print-option -mpopcnt -madx -mbmi -mbmi2 -mlzcnt
     internal-print-option -mfxsr -mxsave -mxsaveopt -mxsavec -mxsaves
     internal-print-option -mrtm -mhle -mtbm -mmwaitx -mclzero -mpku
-    internal-print-option -mmovdiri -mmovdir64b
-    internal-print-option -mpclmul -mfsgsbase -mf16c -mfma -mpconfig -mwbnoinvd -mfma4 -mprfchw -mrdpid -msgx -mxop -mlwp -mgfni -mvaes -mvpclmulqdq
-    internal-print-option -mcx16 -msahf -mmovbe -mshstk -mcrc32
-
-    internal-print-option -mprefer-vector-width=512
+    internal-print-option -mpclmul -mfsgsbase -mf16c -mfma -mfma4 -mprfchw -mrdpid -msgx -mxop -mlwp
+    internal-print-option -mcx16 -msahf -mmovbe -mcrc32
 
     X86_OPTIONS_TUNE_CTRL_LIST='^avoid_false_dep_for_bmi,^lcp_stall,use_incdec,use_himode_fiop,use_simode_fiop,use_ffreep,ext_80387_constants'
 
@@ -383,6 +393,19 @@ internal-print-x86-options-gcc-8() {
     internal-print-option -mabi=sysv -mtls-dialect=gnu2
     # internal-print-option -mthreads # Doesn't actually work anywhere except MinGW
     internal-print-option -masm=intel # Obviously (note: could potentially interfere with Godbolt... will have to see how it works out)
+}
+
+internal-print-x86-options-gcc-8() {
+    internal-print-x86-options-gcc-7
+
+    internal-print-option -march=icelake-server
+
+    internal-print-option -mavx512vbmi2 -mavx512bitalg -mavx512vnni
+    internal-print-option -mmovdiri -mmovdir64b
+    internal-print-option -mpconfig -mwbnoinvd -mgfni -mvaes -mvpclmulqdq
+    internal-print-option -mshstk
+
+    internal-print-option -mprefer-vector-width=512
 }
 
 internal-print-x86-options-gcc-9-before-9-4() {
@@ -492,7 +515,7 @@ internal-print-x86-options() {
 }
 
 internal-print-x86-64-options() {
-    internal-print-x86-options-gcc-8
+    internal-print-x86-options-gcc-7
 
     # If X86_OPTIONS_TUNE_CTRL_LIST is set, set the -mtune-ctrl option to it
     [ -n "${X86_OPTIONS_TUNE_CTRL_LIST:-}" ] && internal-print-option -mtune-ctrl="$X86_OPTIONS_TUNE_CTRL_LIST"
