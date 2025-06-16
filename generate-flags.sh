@@ -12,7 +12,7 @@ internal-print-option() {
 }
 
 # Options to make the compiler accept as much C++ code as possible (even invalid/non-compliant code or code that uses extensions)
-internal-print-generic-options-standards-and-extended-features-gcc-9() {
+internal-print-generic-options-standards-and-extended-features-gcc-8() {
     internal-print-option -std=gnu++2a
     internal-print-option -pthread
     internal-print-option -fexceptions -frtti
@@ -31,7 +31,7 @@ internal-print-generic-options-standards-and-extended-features-gcc-9() {
 }
 
 internal-print-generic-options-standards-and-extended-features-gcc-10() {
-    internal-print-generic-options-standards-and-extended-features-gcc-9
+    internal-print-generic-options-standards-and-extended-features-gcc-8
     internal-print-option -fcoroutines
 }
 
@@ -60,7 +60,7 @@ internal-print-generic-options-standards-and-extended-features() {
 }
 
 # Options that make the compiler generate code that is as fast as possible, even if it means breaking some standards or making the code non-portable
-internal-print-generic-options-optimizations-non-standard-gcc-9() {
+internal-print-generic-options-optimizations-non-standard-gcc-8() {
     internal-print-option -ffast-math -fno-semantic-interposition # The stuff enabled by -Ofast, used instead of -Ofast because Clang deprecated -Ofast
     internal-print-option -ffp-contract=fast
 
@@ -69,7 +69,7 @@ internal-print-generic-options-optimizations-non-standard-gcc-9() {
 }
 
 internal-print-generic-options-optimizations-non-standard-gcc-10() {
-    internal-print-generic-options-optimizations-non-standard-gcc-9
+    internal-print-generic-options-optimizations-non-standard-gcc-8
     internal-print-option -fallow-store-data-races # Only added in GCC 10 but is also part of the stuff enabled by -Ofast (see also above comment on using this instead of -Ofast)
     internal-print-option -ffinite-loops
 }
@@ -79,7 +79,7 @@ internal-print-generic-options-optimizations-non-standard() {
     internal-print-option -fcx-method=limited-range
 }
 
-internal-print-generic-options-optimizations-disable-non-standard-gcc-9() {
+internal-print-generic-options-optimizations-disable-non-standard-gcc-8() {
     internal-print-option -fno-fast-math -fsemantic-interposition
     internal-print-option -ffp-contract=on
 
@@ -88,7 +88,7 @@ internal-print-generic-options-optimizations-disable-non-standard-gcc-9() {
 }
 
 internal-print-generic-options-optimizations-disable-non-standard-gcc-10() {
-    internal-print-generic-options-optimizations-disable-non-standard-gcc-9
+    internal-print-generic-options-optimizations-disable-non-standard-gcc-8
     internal-print-option -fno-allow-store-data-races
     # We do not set -fno-finite-loops here - let the language standard decide whether loops are finite or not
     # C++11 and later require that loops are finite, so setting -fno-finite-loops there would be going beyond what the standard requires
@@ -99,7 +99,7 @@ internal-print-generic-options-optimizations-disable-non-standard() {
     internal-print-option -fcx-method=stdc
 }
 
-internal-print-generic-options-optimization-gcc-9() {
+internal-print-generic-options-optimization-gcc-8() {
     # Options for optimization
     internal-print-option -fbuiltin -fnonansi-builtins 
     # internal-print-option -fhosted # Only for C, not C++
@@ -146,7 +146,7 @@ internal-print-generic-options-optimization-gcc-9() {
 }
 
 internal-print-generic-options-optimization-gcc-10() {
-    internal-print-generic-options-optimization-gcc-9
+    internal-print-generic-options-optimization-gcc-8
     internal-print-option -fallocation-dce
 }
 
@@ -170,7 +170,7 @@ internal-print-generic-options-optimization() {
     internal-print-option -fipa-reorder-for-locality # Might not be much good without profile feedback ?
 }
 
-internal-print-generic-options-optimization-params-gcc-9() {
+internal-print-generic-options-optimization-params-gcc-8() {
     internal-print-option --param=max-crossjump-edges=100000 # 100 at -O3
     internal-print-option --param=max-goto-duplication-insns=8888 # 8 at -O3
     internal-print-option --param=max-delay-slot-insn-search=100000 # 100 at -O3
@@ -190,7 +190,6 @@ internal-print-generic-options-optimization-params-gcc-9() {
     internal-print-option --param=iv-max-considered-uses=250000 # 250 at -O3
 
     internal-print-option --param=dse-max-object-size=262144 # 256 at -O3
-    internal-print-option --param=dse-max-alias-queries-per-store=262144 # 256 at -O3
 
     internal-print-option --param=scev-max-expr-size=100000 # 100 at -O3
     internal-print-option --param=scev-max-expr-complexity=10000 # 10 at -O3
@@ -252,12 +251,17 @@ internal-print-generic-options-optimization-params-gcc-9() {
 
     internal-print-option --param=uninit-control-dep-attempts=65536 # 100 at -O3
 
-    internal-print-option --param=ssa-name-def-chain-limit=524288 # 512 at -O3
     # internal-print-option --param=hash-table-verification-limit=10000 # 10 at -O3 # Takes a long time to run, to the point Godbolt times out, so disable it for now
 
     internal-print-option --param=max-early-inliner-iterations=1000 # 1 at -O3
     internal-print-option --param=max-fields-for-field-sensitive=100000 # 100 at -O3
     internal-print-option --param=sra-max-propagations=32768 # 32 at -O3
+}
+
+internal-print-generic-options-optimization-params-gcc-9() {
+    internal-print-generic-options-optimization-params-gcc-8
+    internal-print-option --param=dse-max-alias-queries-per-store=262144 # 256 at -O3
+    internal-print-option --param=ssa-name-def-chain-limit=524288 # 512 at -O3
 }
 
 internal-print-generic-options-optimization-params-gcc-10() {
@@ -330,16 +334,16 @@ internal-print-generic-options-optimization-params() {
 
 # Note: $1 is a boolean that indicates whether to print the non-standard optimizations or to disable them
 internal-print-generic-options() {
-    internal-print-generic-options-standards-and-extended-features-gcc-9
-    internal-print-generic-options-optimization-gcc-9
-    ("$1" && internal-print-generic-options-optimizations-non-standard-gcc-9) || internal-print-generic-options-optimizations-disable-non-standard-gcc-9
-    internal-print-generic-options-optimization-params-gcc-9
+    internal-print-generic-options-standards-and-extended-features-gcc-8
+    internal-print-generic-options-optimization-gcc-8
+    ("$1" && internal-print-generic-options-optimizations-non-standard-gcc-8) || internal-print-generic-options-optimizations-disable-non-standard-gcc-8
+    internal-print-generic-options-optimization-params-gcc-8
     internal-print-option -g0 # We specifically want to avoid debugging statements, as they clutter assembly output and make it harder to read
 }
 
 # Note as to the multiple -mtune-ctrl - the last one will be used alone and the previous ones will be ignored, so we must specify the full ones on each version
-internal-print-x86-options-gcc-9() {
-    internal-print-option -march=tigerlake
+internal-print-x86-options-gcc-8() {
+    internal-print-option -march=icelake-server
     internal-print-option -mtune=generic
 
     internal-print-option -mfpmath=both # "still experimental" and results "in unstable performance" according to documentation, we'll have to see how it works out
@@ -357,7 +361,7 @@ internal-print-x86-options-gcc-9() {
     internal-print-option -mfxsr -mxsave -mxsaveopt -mxsavec -mxsaves
     internal-print-option -mrtm -mhle -mtbm -mmwaitx -mclzero -mpku
     internal-print-option -mmovdiri -mmovdir64b
-    internal-print-option -mpclmul -mfsgsbase -mptwrite -mf16c -mfma -mpconfig -mwbnoinvd -mfma4 -mprfchw -mrdpid -msgx -mxop -mlwp -mgfni -mvaes -mwaitpkg -mvpclmulqdq -mcldemote
+    internal-print-option -mpclmul -mfsgsbase -mf16c -mfma -mpconfig -mwbnoinvd -mfma4 -mprfchw -mrdpid -msgx -mxop -mlwp -mgfni -mvaes -mvpclmulqdq
     internal-print-option -mcx16 -msahf -mmovbe -mshstk -mcrc32
 
     internal-print-option -mprefer-vector-width=512
@@ -371,10 +375,16 @@ internal-print-x86-options-gcc-9() {
     internal-print-option -masm=intel # Obviously (note: could potentially interfere with Godbolt... will have to see how it works out)
 }
 
+internal-print-x86-options-gcc-9() {
+    internal-print-x86-options-gcc-8
+    internal-print-option -march=tigerlake
+    internal-print-option -mptwrite -mwaitpkg -mcldemote
+}
+
 internal-print-x86-options-gcc-10() {
     internal-print-x86-options-gcc-9
     internal-print-option -mavx512bf16 -mavx512vp2intersect
-    internal-print-option  -menqcmd
+    internal-print-option -menqcmd
 }
 
 internal-print-x86-options-gcc-11() {
@@ -447,7 +457,7 @@ internal-print-x86-options() {
 }
 
 internal-print-x86-64-options() {
-    internal-print-x86-options-gcc-9
+    internal-print-x86-options-gcc-8
     internal-print-option -m64
     internal-print-option -fno-section-anchors # GCC does not support this option on x86-64
 }
