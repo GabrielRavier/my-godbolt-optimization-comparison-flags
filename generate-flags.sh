@@ -8,13 +8,14 @@ set -euo pipefail
 # - If we get the issues with random unrolling on PowerPC again, look into -munroll-only-small-loops and -f[no-]unroll-[all-]loops (or perhaps --param values like max-unroll-times ?)
 # - Technically we haven't checked GCC 11.5 and GCC 4.5.4 (we only have GCC 11.4 and GCC 4.5.3) though I wouldn't expect them to introduce any flags
 # - GCC 4.3.6 and 4.2.4 haven't been checked, along with GCC versions before 3.4.6
+# - No minor versions of GCC have been checked below 4.6.4 (that is, 4.6.x hasn't been checked either)
 
 internal-print-option() {
     printf '%s ' "$@"
 }
 
 # Options to make the compiler accept as much C++ code as possible (even invalid/non-compliant code or code that uses extensions)
-internal-print-generic-options-standards-and-extended-features-gcc-4-6() {
+internal-print-generic-options-standards-and-extended-features-gcc-4-5() {
     internal-print-option -std=gnu++0x
     internal-print-option -pthread
     internal-print-option -fexceptions -frtti
@@ -31,7 +32,7 @@ internal-print-generic-options-standards-and-extended-features-gcc-4-6() {
 }
 
 internal-print-generic-options-standards-and-extended-features-gcc-4-7() {
-    internal-print-generic-options-standards-and-extended-features-gcc-4-6
+    internal-print-generic-options-standards-and-extended-features-gcc-4-5
     internal-print-option -fgnu-tm
 }
 
@@ -87,12 +88,16 @@ internal-print-generic-options-standards-and-extended-features() {
 }
 
 # Options that make the compiler generate code that is as fast as possible, even if it means breaking some standards or making the code non-portable
-internal-print-generic-options-optimizations-non-standard-gcc-4-6() {
+internal-print-generic-options-optimizations-non-standard-gcc-4-5() {
     internal-print-option -ffast-math # The stuff enabled by -Ofast, used instead of -Ofast because Clang deprecated -Ofast
-    internal-print-option -ffp-contract=fast
 
     internal-print-option -fexcess-precision=fast -fno-float-store -ffast-math -fno-math-errno -funsafe-math-optimizations -fassociative-math -freciprocal-math -ffinite-math-only -fno-signed-zeros -fno-trapping-math -fno-rounding-math
     internal-print-option -fno-signaling-nans -fcx-fortran-rules -fcx-limited-range
+}
+
+internal-print-generic-options-optimizations-non-standard-gcc-4-6() {
+    internal-print-generic-options-optimizations-non-standard-gcc-4-5
+    internal-print-option -ffp-contract=fast
 }
 
 internal-print-generic-options-optimizations-non-standard-gcc-5() {
@@ -116,12 +121,16 @@ internal-print-generic-options-optimizations-non-standard() {
     internal-print-option -fcx-method=limited-range
 }
 
-internal-print-generic-options-optimizations-disable-non-standard-gcc-4-6() {
+internal-print-generic-options-optimizations-disable-non-standard-gcc-4-5() {
     internal-print-option -fno-fast-math
-    internal-print-option -ffp-contract=on
 
     internal-print-option -fexcess-precision=standard -fmath-errno -fno-unsafe-math-optimizations -fno-associative-math -fno-reciprocal-math -fno-finite-math-only -fsigned-zeros -ftrapping-math -frounding-math
     internal-print-option -fsignaling-nans -fno-cx-fortran-rules -fno-cx-limited-range
+}
+
+internal-print-generic-options-optimizations-disable-non-standard-gcc-4-6() {
+    internal-print-generic-options-optimizations-disable-non-standard-gcc-4-5
+    internal-print-option -ffp-contract=on
 }
 
 internal-print-generic-options-optimizations-disable-non-standard-gcc-5() {
@@ -146,25 +155,16 @@ internal-print-generic-options-optimizations-disable-non-standard() {
     internal-print-option -fcx-method=stdc
 }
 
-internal-print-generic-options-optimization-gcc-4-6() {
+internal-print-generic-options-optimization-gcc-4-5() {
     # Options for optimization
     internal-print-option -fbuiltin -fnonansi-builtins 
     # internal-print-option -fhosted # Only for C, not C++
-    internal-print-option -fstrict-enums -fstrict-aliasing -fstrict-overflow
+    internal-print-option -fstrict-aliasing -fstrict-overflow
     internal-print-option -O3
     internal-print-option -fomit-frame-pointer # Should be enabled by -O3, but just in case (some distros are disabling it these days...)
     internal-print-option -fmodulo-sched -fmodulo-sched-allow-regmoves
     internal-print-option -fgcse-sm -fgcse-las
-    internal-print-option -fdelete-null-pointer-checks
-    internal-print-option -fvariable-expansion-in-unroller
-    internal-print-option -fvariable-expansion-in-unroller
-    internal-print-option -fprefetch-loop-arrays
-    internal-print-option -freorder-blocks-and-partition
-    internal-print-option -fweb
-    internal-print-option -frename-registers
-    internal-print-option -ftracer
-    internal-print-option -funswitch-loops
-    internal-print-option -fsection-anchors
+    internal-print-option -fdelete-null-pointer-checks -fvariable-expansion-in-unroller -fprefetch-loop-arrays -freorder-blocks-and-partition -fweb -frename-registers -ftracer -funswitch-loops -fsection-anchors
 
     internal-print-option -fira-algorithm=CB # Apparently should be better in general but it might just be that it's enabled by default on every architecture where it works (i.e. this would either do nothing or error)
     internal-print-option -fira-loop-pressure
@@ -176,7 +176,13 @@ internal-print-generic-options-optimization-gcc-4-6() {
 
     internal-print-option -fipa-pta -fipa-cp
 
-    internal-print-option -ftree-cselim -ftree-builtin-call-dce -ftree-loop-if-convert -ftree-loop-im -ftree-loop-ivcanon -fivopts -ftree-vectorize
+    internal-print-option -ftree-cselim -ftree-builtin-call-dce -ftree-loop-im -ftree-loop-ivcanon -fivopts -ftree-vectorize
+}
+
+internal-print-generic-options-optimization-gcc-4-6() {
+    internal-print-generic-options-optimization-gcc-4-5
+    internal-print-option -fstrict-enums
+    internal-print-option -ftree-loop-if-convert
 }
 
 internal-print-generic-options-optimization-gcc-4-7() {
@@ -191,14 +197,12 @@ internal-print-generic-options-optimization-gcc-4-7() {
 
 internal-print-generic-options-optimization-gcc-4-8() {
     internal-print-generic-options-optimization-gcc-4-7
-    internal-print-option -fira-hoist-pressure
-    internal-print-option -ftree-coalesce-vars
+    internal-print-option -fira-hoist-pressure -ftree-coalesce-vars
 }
 
 internal-print-generic-options-optimization-gcc-4-9() {
     internal-print-generic-options-optimization-gcc-4-8
-    internal-print-option -fdevirtualize-speculatively
-    internal-print-option -flive-range-shrinkage
+    internal-print-option -fdevirtualize-speculatively -flive-range-shrinkage
 
     # These require Graphite/ISL
     internal-print-option -ftree-loop-linear
@@ -208,12 +212,7 @@ internal-print-generic-options-optimization-gcc-4-9() {
 
 internal-print-generic-options-optimization-gcc-5() {
     internal-print-generic-options-optimization-gcc-4-9
-
-    internal-print-option -fdevirtualize-at-ltrans
-    internal-print-option -fstdarg-opt
-
-    internal-print-option -fschedule-fusion
-
+    internal-print-option -fdevirtualize-at-ltrans -fstdarg-opt -fschedule-fusion
     internal-print-option -fipa-ra -fipa-icf
 }
 
@@ -241,14 +240,11 @@ internal-print-generic-options-optimization-gcc-13() {
 
 internal-print-generic-options-optimization() {
     internal-print-generic-options-optimization-gcc-13
-
-    internal-print-option -flate-combine-instructions
-    internal-print-option -fmalloc-dce=2
-
+    internal-print-option -flate-combine-instructions -fmalloc-dce=2
     internal-print-option -fipa-reorder-for-locality # Might not be much good without profile feedback ?
 }
 
-internal-print-generic-options-optimization-params-gcc-4-6() {
+internal-print-generic-options-optimization-params-gcc-4-5() {
     internal-print-option --param=max-crossjump-edges=100000 # 100 at -O3
     internal-print-option --param=max-goto-duplication-insns=8888 # 8 at -O3
     internal-print-option --param=max-delay-slot-insn-search=100000 # 100 at -O3
@@ -258,19 +254,14 @@ internal-print-generic-options-optimization-params-gcc-4-6() {
     internal-print-option --param=max-iterations-to-track=10000000 # 1000 at -O3
     internal-print-option --param=max-reload-search-insns=100000 # 100 at -O3
     internal-print-option --param=max-cselib-memory-locations=500000 # 500 at -O3
-    internal-print-option --param=max-hoist-depth=300000 # 300 at -O3
     internal-print-option --param=max-last-value-rtl=10000000 # 10000 at -O3
     internal-print-option --param=max-partial-antic-length=1000000 # 100 at -O3
-    internal-print-option --param=max-dse-active-local-stores=5000000 # 5000 at -O3
     internal-print-option --param=max-early-inliner-iterations=1000 # 1 at -O3
     internal-print-option --param=max-fields-for-field-sensitive=100000 # 100 at -O3
     internal-print-option --param=max-vartrack-size=1000000000 # 50000000 at -O3 (50000000000 would be far above the maximum of 2147483647, and we use less than half of that just in case there could be overflow issues)
 
     internal-print-option --param=iv-consider-all-candidates-bound=40000 # 40 at -O3
     internal-print-option --param=iv-max-considered-uses=250000 # 250 at -O3
-
-    internal-print-option --param=scev-max-expr-size=100000 # 100 at -O3
-    internal-print-option --param=scev-max-expr-complexity=10000 # 10 at -O3
 
     internal-print-option --param=max-cse-path-length=65536 # 10 at -O3 (65536 is the maximum value)
     internal-print-option --param=max-cse-insns=1000000 # 1000 at -O3
@@ -291,11 +282,21 @@ internal-print-generic-options-optimization-params-gcc-4-6() {
 
     internal-print-option --param=loop-invariant-max-bbs-in-loop=10000000 # 10000 at -O3
 
+    internal-print-option --param=scev-max-expr-size=100000 # 100 at -O3
     internal-print-option --param=graphite-max-nb-scop-params=10000 # 10 at -O3
-    internal-print-option --param=cxx-max-namespaces-for-diagnostic-help=1000000 # 1000 at -O3
     internal-print-option --param=sms-dfa-history=16 # 0 at -O3
 
     # internal-print-option --param=hash-table-verification-limit=10000 # 10 at -O3 # Takes a long time to run, to the point Godbolt times out, so disable it for now
+}
+
+internal-print-generic-options-optimization-params-gcc-4-6() {
+    internal-print-generic-options-optimization-params-gcc-4-5
+
+    internal-print-option --param=max-hoist-depth=300000 # 300 at -O3
+    internal-print-option --param=max-dse-active-local-stores=5000000 # 5000 at -O3
+
+    internal-print-option --param=scev-max-expr-complexity=10000 # 10 at -O3
+    internal-print-option --param=cxx-max-namespaces-for-diagnostic-help=1000000 # 1000 at -O3
 }
 
 internal-print-generic-options-optimization-params-gcc-4-7() {
@@ -450,15 +451,15 @@ internal-print-generic-options-optimization-params() {
 
 # Note: $1 is a boolean that indicates whether to print the non-standard optimizations or to disable them
 internal-print-generic-options() {
-    internal-print-generic-options-standards-and-extended-features-gcc-4-6
-    internal-print-generic-options-optimization-gcc-4-6
-    ("$1" && (internal-print-generic-options-optimizations-non-standard-gcc-4-6 || true)) || internal-print-generic-options-optimizations-disable-non-standard-gcc-4-6
-    internal-print-generic-options-optimization-params-gcc-4-6
+    internal-print-generic-options-standards-and-extended-features-gcc-4-5
+    internal-print-generic-options-optimization-gcc-4-5
+    ("$1" && (internal-print-generic-options-optimizations-non-standard-gcc-4-5 || true)) || internal-print-generic-options-optimizations-disable-non-standard-gcc-4-5
+    internal-print-generic-options-optimization-params-gcc-4-5
     internal-print-option -g0 # We specifically want to avoid debugging statements, as they clutter assembly output and make it harder to read
 }
 
-internal-print-x86-options-gcc-4-6() {
-    internal-print-option -march=core-avx-i
+internal-print-x86-options-gcc-4-5() {
+    internal-print-option -march=barcelona
     internal-print-option -mtune=generic
 
     internal-print-option -mfpmath=both # "still experimental" and results "in unstable performance" according to documentation, we'll have to see how it works out
@@ -467,14 +468,20 @@ internal-print-x86-options-gcc-4-6() {
     internal-print-option -msse -msse2 -msse3 -mssse3 -msse4 -msse4a -msse4.1 -msse4.2
     internal-print-option -mavx
     # internal-print-option -mevex512 # Removed in GCC 16, it seems
-    internal-print-option -mpopcnt -mbmi
-    internal-print-option -mmmx -maes -mrdrnd -m3dnow -mtbm -mpclmul -mfsgsbase -mf16c -mfma -mfma4 -mxop -mlwp -mcx16 -msahf -mmovbe -mcrc32
+    internal-print-option -mpopcnt
+    internal-print-option -mmmx -maes -m3dnow -mpclmul -mfma -mfma4 -mxop -mlwp -mcx16 -msahf -mmovbe -mcrc32
 
     internal-print-option -momit-leaf-frame-pointer
 
     internal-print-option -mabi=sysv -mtls-dialect=gnu2
     # internal-print-option -mthreads # Doesn't actually work anywhere except MinGW
     internal-print-option -masm=intel # Obviously (note: could potentially interfere with Godbolt... will have to see how it works out)
+}
+
+internal-print-x86-options-gcc-4-6() {
+    internal-print-x86-options-gcc-4-5
+    internal-print-option -march=core-avx-i
+    internal-print-option -mbmi -mrdrnd -mtbm -mfsgsbase -mf16c
 }
 
 internal-print-x86-options-gcc-4-7() {
@@ -538,8 +545,7 @@ internal-print-x86-options-gcc-8() {
 
     internal-print-option -mavx512vbmi2 -mavx512bitalg -mavx512vnni
     internal-print-option -mmovdiri -mmovdir64b
-    internal-print-option -mpconfig -mwbnoinvd -mgfni -mvaes -mvpclmulqdq
-    internal-print-option -mshstk
+    internal-print-option -mpconfig -mwbnoinvd -mgfni -mvaes -mvpclmulqdq -mshstk
 
     internal-print-option -mprefer-vector-width=512
 }
@@ -626,10 +632,9 @@ internal-print-x86-options-gcc-14() {
     internal-print-x86-options-gcc-13
 
     internal-print-option -mavxvnniint16
-    internal-print-option -msha512
     internal-print-option -msm3 -msm4
     internal-print-option -mavx10.1 # -mavx10.1-256 -mavx10.1-512 # -mavx10.1-256 and -mavx10.1-512 are removed in GCC 16, it seems
-    internal-print-option -mapxf -musermsr
+    internal-print-option -msha512 -mapxf -musermsr
 
     internal-print-option -mnoreturn-no-callee-saved-registers
 }
@@ -651,7 +656,7 @@ internal-print-x86-options() {
 }
 
 internal-print-x86-64-options() {
-    internal-print-x86-options-gcc-4-6
+    internal-print-x86-options-gcc-4-5
 
     # If X86_OPTIONS_TUNE_CTRL_LIST is set, set the -mtune-ctrl option to it
     [ -n "${X86_OPTIONS_TUNE_CTRL_LIST:-}" ] && internal-print-option -mtune-ctrl="$X86_OPTIONS_TUNE_CTRL_LIST"
