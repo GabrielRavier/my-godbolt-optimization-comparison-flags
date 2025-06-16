@@ -255,13 +255,23 @@ internal-print-generic-options-optimization-params-gcc-8() {
 
     internal-print-option --param=max-early-inliner-iterations=1000 # 1 at -O3
     internal-print-option --param=max-fields-for-field-sensitive=100000 # 100 at -O3
+
     internal-print-option --param=sra-max-propagations=32768 # 32 at -O3
 }
 
-internal-print-generic-options-optimization-params-gcc-9() {
-    internal-print-generic-options-optimization-params-gcc-8
+internal-print-generic-options-optimization-params-gcc-9-before-9-2() {
+    internal-print-generic-options-optimization-params-gcc-8 | sed 's/--param=sra-max-propagations=[0-9]\+ //g' # sra-max-propagations is not supported in GCC 9.1 to GCC 9.3, so remove it
     internal-print-option --param=dse-max-alias-queries-per-store=262144 # 256 at -O3
+}
+
+internal-print-generic-options-optimization-params-gcc-9-before-9-4() {
+    internal-print-generic-options-optimization-params-gcc-9-before-9-2
     internal-print-option --param=ssa-name-def-chain-limit=524288 # 512 at -O3
+}
+
+internal-print-generic-options-optimization-params-gcc-9() {
+    internal-print-generic-options-optimization-params-gcc-9-before-9-4
+    internal-print-option --param=sra-max-propagations=32768 # 32 at -O3 # Was already added in GCC 8, but removed in GCC 9.1 to GCC 9.3, so add it back here
 }
 
 internal-print-generic-options-optimization-params-gcc-10() {
@@ -301,18 +311,19 @@ internal-print-generic-options-optimization-params-gcc-12() {
     internal-print-option --param=relation-block-limit=9999 # 200 at -O3 (9999 is the maximum value)
 }
 
-internal-print-generic-options-optimization-params-gcc-13() {
+internal-print-generic-options-optimization-params-gcc-13-before-13-3() {
     internal-print-generic-options-optimization-params-gcc-12
 
     internal-print-option --param=vect-max-layout-candidates=32768 # 32 at -O3
     internal-print-option --param=max-jump-thread-paths=65536 # 64 at -O3 (65536 is the maximum value)
-
     internal-print-option --param=ira-simple-lra-insn-threshold=1000000 # 1000 at -O3
+    internal-print-option --param=ranger-recompute-depth=100 # 5 at -O3 (100 is the maximum value)
+}
 
+internal-print-generic-options-optimization-params-gcc-13() {
+    internal-print-generic-options-optimization-params-gcc-13-before-13-3
     internal-print-option --param=uninit-max-chain-len=128 # 8 at -O3 (128 is the maximum value)
     internal-print-option --param=uninit-max-num-chains=128 # 8 at -O3 (128 is the maximum value)
-
-    internal-print-option --param=ranger-recompute-depth=100 # 5 at -O3 (100 is the maximum value)
 }
 
 internal-print-generic-options-optimization-params-gcc-14() {
@@ -334,14 +345,13 @@ internal-print-generic-options-optimization-params() {
 
 # Note: $1 is a boolean that indicates whether to print the non-standard optimizations or to disable them
 internal-print-generic-options() {
-    internal-print-generic-options-standards-and-extended-features-gcc-14
-    internal-print-generic-options-optimization-gcc-13
-    ("$1" && internal-print-generic-options-optimizations-non-standard-gcc-10) || internal-print-generic-options-optimizations-disable-non-standard-gcc-10
-    internal-print-generic-options-optimization-params-gcc-14
+    internal-print-generic-options-standards-and-extended-features-gcc-8
+    internal-print-generic-options-optimization-gcc-8
+    ("$1" && internal-print-generic-options-optimizations-non-standard-gcc-8) || internal-print-generic-options-optimizations-disable-non-standard-gcc-8
+    internal-print-generic-options-optimization-params-gcc-8
     internal-print-option -g0 # We specifically want to avoid debugging statements, as they clutter assembly output and make it harder to read
 }
 
-# Note as to the multiple -mtune-ctrl - the last one will be used alone and the previous ones will be ignored, so we must specify the full ones on each version
 internal-print-x86-options-gcc-8() {
     internal-print-option -march=icelake-server
     internal-print-option -mtune=generic
@@ -366,7 +376,7 @@ internal-print-x86-options-gcc-8() {
 
     internal-print-option -mprefer-vector-width=512
 
-    internal-print-option -mtune-ctrl='^avoid_false_dep_for_bmi,^lcp_stall,use_incdec,use_himode_fiop,use_simode_fiop,use_ffreep,ext_80387_constants'
+    X86_OPTIONS_TUNE_CTRL_LIST='^avoid_false_dep_for_bmi,^lcp_stall,use_incdec,use_himode_fiop,use_simode_fiop,use_ffreep,ext_80387_constants'
 
     internal-print-option -momit-leaf-frame-pointer
 
@@ -375,10 +385,14 @@ internal-print-x86-options-gcc-8() {
     internal-print-option -masm=intel # Obviously (note: could potentially interfere with Godbolt... will have to see how it works out)
 }
 
-internal-print-x86-options-gcc-9() {
+internal-print-x86-options-gcc-9-before-9-4() {
     internal-print-x86-options-gcc-8
-    internal-print-option -march=tigerlake
     internal-print-option -mptwrite -mwaitpkg -mcldemote
+}
+
+internal-print-x86-options-gcc-9() {
+    internal-print-x86-options-gcc-9-before-9-4
+    internal-print-option -march=tigerlake
 }
 
 internal-print-x86-options-gcc-10() {
@@ -387,7 +401,7 @@ internal-print-x86-options-gcc-10() {
     internal-print-option -menqcmd
 }
 
-internal-print-x86-options-gcc-11() {
+internal-print-x86-options-gcc-11-before-11-3() {
     internal-print-x86-options-gcc-10
 
     internal-print-option -march=x86-64-v4 # Seems like a good baseline
@@ -395,33 +409,58 @@ internal-print-x86-options-gcc-11() {
     internal-print-option -mavxvnni
     internal-print-option -mamx-tile -mamx-int8 -mamx-bf16
     internal-print-option -mkl -mwidekl
-    internal-print-option -muintr -mtsxldtrk -mserialize -mhreset -mmwait
+    internal-print-option -muintr -mtsxldtrk -mserialize -mhreset
 
     internal-print-option -mneeded
 }
 
-internal-print-x86-options-gcc-12() {
+internal-print-x86-options-gcc-11() {
+    internal-print-x86-options-gcc-11-before-11-3
+    internal-print-option -mmwait
+}
+
+internal-print-x86-options-gcc-12-before-12-3() {
     internal-print-x86-options-gcc-11
 
     internal-print-option -mavx512fp16
 
     internal-print-option -mmove-max=512 -mstore-max=512
 
-    local TUNE_CTRL_LIST
-    TUNE_CTRL_LIST='^avoid_false_dep_for_bmi,^lcp_stall,use_incdec,use_himode_fiop,use_simode_fiop,use_ffreep,ext_80387_constants'
-    TUNE_CTRL_LIST="$TUNE_CTRL_LIST"',use_gather_2parts,use_scatter_2parts,use_gather_4parts,use_scatter_4parts,use_gather_8parts,use_scatter_8parts'
-    TUNE_CTRL_LIST="$TUNE_CTRL_LIST"',^avoid_fma512_chains,avx512_move_by_pieces,avx512_store_by_pieces'
-    internal-print-option -mtune-ctrl="$TUNE_CTRL_LIST"
+    X86_OPTIONS_TUNE_CTRL_LIST="$X86_OPTIONS_TUNE_CTRL_LIST"',use_gather_2parts,use_gather_4parts'
+    X86_OPTIONS_TUNE_CTRL_LIST="$X86_OPTIONS_TUNE_CTRL_LIST"',avx512_move_by_pieces,avx512_store_by_pieces'
 }
 
-internal-print-x86-options-gcc-13() {
+internal-print-x86-options-gcc-12-before-12-4() {
+    internal-print-x86-options-gcc-12-before-12-3
+
+    X86_OPTIONS_TUNE_CTRL_LIST="$X86_OPTIONS_TUNE_CTRL_LIST"',use_scatter_2parts,use_scatter_4parts'
+    X86_OPTIONS_TUNE_CTRL_LIST="$X86_OPTIONS_TUNE_CTRL_LIST"',^avoid_fma512_chains'
+}
+
+internal-print-x86-options-gcc-12() {
+    internal-print-x86-options-gcc-12-before-12-4
+
+    # Note: use_gather_8parts and use_scatter_8parts appear to not be supported in GCC 13.1 and GCC 13.2, even though GCC 12.4 supports them...
+    X86_OPTIONS_TUNE_CTRL_LIST="$X86_OPTIONS_TUNE_CTRL_LIST"',use_gather_8parts,use_scatter_8parts'
+}
+
+internal-print-x86-options-gcc-13-before-13-3() {
     internal-print-x86-options-gcc-12
 
     internal-print-option -mavxifma -mavxvnniint8 -mavxneconvert
     internal-print-option -mamx-fp16 -mamx-complex
     internal-print-option -mcmpccxadd -mprefetchi -mraoint
 
+    # Remove use_gather_8parts and use_scatter_8parts, as they are not supported in GCC 13.1 and GCC 13.2
+    X86_OPTIONS_TUNE_CTRL_LIST="$(echo "$X86_OPTIONS_TUNE_CTRL_LIST" | sed 's/,use_gather_8parts//;s/,use_scatter_8parts//')"
+
     internal-print-option --param=x86-stv-max-visits=1000000 # 10000 at -O3 (1000000 is the maximum value)
+}
+
+internal-print-x86-options-gcc-13() {
+    internal-print-x86-options-gcc-13-before-13-3
+
+    X86_OPTIONS_TUNE_CTRL_LIST="$X86_OPTIONS_TUNE_CTRL_LIST"',use_gather_8parts,use_scatter_8parts' # Was already added in GCC 12 but removed in GCC 13.1 and GCC 13.2, so add it back here
 }
 
 internal-print-x86-options-gcc-14() {
@@ -444,12 +483,8 @@ internal-print-x86-options-gcc-15()
     internal-print-option -mamx-avx512 -mamx-tf32 -mamx-transpose -mamx-fp8
     internal-print-option -mmovrs -mamx-movrs
 
-    local TUNE_CTRL_LIST
-    TUNE_CTRL_LIST='^avoid_false_dep_for_tzcnt,^avoid_false_dep_for_bls,^avoid_false_dep_for_bmi'
-    TUNE_CTRL_LIST="$TUNE_CTRL_LIST"',^lcp_stall,use_incdec,use_himode_fiop,use_simode_fiop,use_ffreep,ext_80387_constants'
-    TUNE_CTRL_LIST="$TUNE_CTRL_LIST"',use_gather_2parts,use_scatter_2parts,use_gather_4parts,use_scatter_4parts,use_gather_8parts,use_scatter_8parts'
-    TUNE_CTRL_LIST="$TUNE_CTRL_LIST"',^avoid_fma512_chains,avx512_move_by_pieces,avx512_store_by_pieces,avx512_two_epilogues'
-    internal-print-option -mtune-ctrl="$TUNE_CTRL_LIST"
+    X86_OPTIONS_TUNE_CTRL_LIST="$X86_OPTIONS_TUNE_CTRL_LIST",'^avoid_false_dep_for_tzcnt,^avoid_false_dep_for_bls'
+    X86_OPTIONS_TUNE_CTRL_LIST="$X86_OPTIONS_TUNE_CTRL_LIST"',avx512_two_epilogues'
 }
 
 internal-print-x86-options() {
@@ -457,7 +492,11 @@ internal-print-x86-options() {
 }
 
 internal-print-x86-64-options() {
-    internal-print-x86-options-gcc-14
+    internal-print-x86-options-gcc-8
+
+    # If X86_OPTIONS_TUNE_CTRL_LIST is set, set the -mtune-ctrl option to it
+    [ -n "${X86_OPTIONS_TUNE_CTRL_LIST:-}" ] && internal-print-option -mtune-ctrl="$X86_OPTIONS_TUNE_CTRL_LIST"
+
     internal-print-option -m64
     internal-print-option -fno-section-anchors # GCC does not support this option on x86-64
 }
