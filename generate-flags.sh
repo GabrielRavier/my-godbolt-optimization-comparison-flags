@@ -101,7 +101,6 @@ internal-print-generic-options-standards-and-extended-features-gcc-15() {
 
 internal-print-generic-options-standards-and-extended-features() {
     internal-print-generic-options-standards-and-extended-features-gcc-15 "$@"
-    "$1" || internal-print-option -fclangir # Apparently required to make -fopenacc do anything, but obviously not supported by GCC
 }
 
 # Options that make the compiler generate code that is as fast as possible, even if it means breaking some standards or making the code non-portable
@@ -154,6 +153,8 @@ internal-print-generic-options-optimizations-non-standard-gcc-10() {
 internal-print-generic-options-optimizations-non-standard() {
     internal-print-generic-options-optimizations-non-standard-gcc-10 "$@"
     "$1" && internal-print-option -fcx-method=limited-range
+    "$1" || internal-print-option -ffp-model=aggressive
+    "$1" || internal-print-option -fno-honor-nans
 }
 
 internal-print-generic-options-optimizations-disable-non-standard-gcc-3-4() {
@@ -204,6 +205,8 @@ internal-print-generic-options-optimizations-disable-non-standard-gcc-10() {
 internal-print-generic-options-optimizations-disable-non-standard() {
     internal-print-generic-options-optimizations-disable-non-standard-gcc-10 "$@"
     "$1" && internal-print-option -fcx-method=stdc
+    "$1" || internal-print-option -ffp-model=strict
+    "$1" || internal-print-option -fhonor-nans
 }
 
 internal-print-generic-options-optimization-gcc-3-4() {
@@ -312,8 +315,15 @@ internal-print-generic-options-optimization-gcc-13() {
 
 internal-print-generic-options-optimization() {
     internal-print-generic-options-optimization-gcc-13 "$@"
+
     "$1" && internal-print-option -flate-combine-instructions -fmalloc-dce=2
     "$1" && internal-print-option -fipa-reorder-for-locality # Might not be much good without profile feedback ?
+
+    "$1" || internal-print-option -fclangir # Apparently required to make -fopenacc do anything, but obviously not supported by GCC
+
+    "$1" || internal-print-option -mllvm -polly
+    "$1" || internal-print-option -mllvm -polly-parallel
+    "$1" || internal-print-option -mllvm -polly-vectorizer=stripmine
 }
 
 internal-print-generic-options-optimization-params-gcc-3-4() {
@@ -779,8 +789,8 @@ internal-print-x86-options() {
     # Print -m64 if we're on x86-64, or -m32 if we're on x86-32
     "$1" && internal-print-option -m64; "$1" || internal-print-option -m32
 
-    # On x86-32, position-independent code is a bit awkward to handle (it seems to output assembly output that llvm-mca has trouble parsing, for instance) and also makes code a bit longer, so disable it
-    "$1" || internal-print-option -fno-pie
+    # position-independent code is a bit awkward to handle (it seems to output assembly output that llvm-mca has trouble parsing, for instance) and also makes code a bit longer, so disable it
+    internal-print-option -fno-pie
 }
 
 # $1 is a boolean that indicates whether we're on x86-64 or x86-32 (if true, we're on x86-64, if false, we're on x86-32)
