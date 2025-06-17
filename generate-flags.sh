@@ -16,13 +16,6 @@ internal-print-option() {
     printf '%s ' "$@"
 }
 
-# internal-print-generic-options-standards-and-extended-features.sh
-# internal-print-generic-options-optimizations-non-standard.sh
-# internal-print-generic-options-optimizations-disable-non-standard.sh
-# internal-print-generic-options-optimizations.sh
-# internal-print-generic-options-optimizations-params.sh
-# internal-print-x86-options.sh
-
 source "$(dirname "$0")/generate-flags/internal/print/options/generic/standards-and-extended-features.sh"
 source "$(dirname "$0")/generate-flags/internal/print/options/generic/optimizations/non-standard.sh"
 source "$(dirname "$0")/generate-flags/internal/print/options/generic/optimizations/disable-non-standard.sh"
